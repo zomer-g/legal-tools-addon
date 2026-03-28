@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+    :root {
+      --blue-600: #1a73e8;
+      --blue-50: #e8f0fe;
+      --blue-100: #d2e3fc;
+      --grey-50: #f8f9fa;
+      --grey-100: #f1f3f4;
+      --grey-200: #e8eaed;
+      --grey-300: #dadce0;
+      --grey-500: #9aa0a6;
+      --grey-700: #5f6368;
+      --grey-900: #202124;
+      --green-600: #1e8e3e;
+      --green-50: #e6f4ea;
+      --red-600: #d93025;
+      --red-50: #fce8e6;
+      --orange-600: #e8710a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+      direction: rtl; font-size: 13px; color: var(--grey-900);
+      background: white; line-height: 1.4;
+      display: flex; flex-direction: column; height: 100vh;
+    }
+
+    /* ---- Top Tabs ---- */
+    .nav-tabs {
+      display: flex; background: white; border-bottom: 1px solid var(--grey-300);
+      position: sticky; top: 0; z-index: 10; flex-shrink: 0;
+    }
+    .nav-tab {
+      flex: 1; padding: 12px 4px 10px; cursor: pointer; border: none; background: none;
+      font-family: inherit; font-size: 12px; font-weight: 500; color: var(--grey-700);
+      text-align: center; border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .nav-tab:hover { color: var(--blue-600); }
+    .nav-tab.active { color: var(--blue-600); border-bottom-color: var(--blue-600); }
+    .nav-tab .mio { font-size: 18px; display: block; margin: 0 auto 2px; }
+
+    /* ---- Panels ---- */
+    .panel { display: none; padding: 16px; flex: 1; overflow-y: auto; }
+    .panel.active { display: block; }
+
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+      padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 500;
+      z-index: 100; opacity: 0; transition: opacity 0.2s; pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { background: var(--green-50); color: var(--green-600); }
+    .toast.error { background: var(--red-50); color: var(--red-600); }
+
+    /* ---- Forms ---- */
+    .field { margin-bottom: 12px; }
+    .field-label { display: block; font-size: 11px; font-weight: 500; color: var(--grey-700); margin-bottom: 4px; letter-spacing: 0.2px; }
+    .field-input, .field-select, .field-textarea {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--grey-300); border-radius: 8px;
+      font-family: inherit; font-size: 13px; direction: rtl; background: white;
+      transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+    }
+    .field-input:focus, .field-select:focus, .field-textarea:focus {
+      border-color: var(--blue-600); box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+    }
+    .field-textarea { height: 48px; resize: vertical; }
+    .field-hint { font-size: 11px; color: var(--grey-500); margin-top: 2px; }
+    .field-row { display: flex; gap: 8px; }
+    .field-row .field { flex: 1; }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      transition: background 0.15s, box-shadow 0.15s; outline: none;
+    }
+    .btn-filled { background: var(--blue-600); color: white; width: 100%; }
+    .btn-filled:hover { background: #1765cc; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    .btn-tonal { background: var(--blue-50); color: var(--blue-600); width: 100%; }
+    .btn-tonal:hover { background: var(--blue-100); }
+    .btn-outline { background: white; color: var(--grey-700); border: 1px solid var(--grey-300); }
+    .btn-outline:hover { background: var(--grey-50); }
+    .btn-text { background: none; color: var(--blue-600); padding: 6px 8px; }
+    .btn-text:hover { background: var(--blue-50); }
+    .btn-danger-text { background: none; color: var(--red-600); padding: 6px 8px; }
+    .btn-danger-text:hover { background: var(--red-50); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .btn .mio { font-size: 16px; }
+
+    /* ---- Cards ---- */
+    .card {
+      background: white; border: 1px solid var(--grey-200); border-radius: 12px;
+      padding: 12px; margin-bottom: 8px; transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--grey-900); }
+    .card-subtitle { font-size: 12px; color: var(--grey-700); margin-top: 2px; }
+    .card-actions { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 500; background: var(--grey-100); color: var(--grey-700);
+    }
+    .badge-blue { background: var(--blue-50); color: var(--blue-600); }
+
+    /* ---- Entity insert button ---- */
+    .entity-insert {
+      background: var(--blue-600); color: white; border: none; border-radius: 50%;
+      width: 28px; height: 28px; cursor: pointer; display: inline-flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .entity-insert:hover { background: #1765cc; }
+    .entity-insert .mio { font-size: 16px; }
+    .entity-row { display: flex; align-items: center; gap: 8px; }
+    .entity-info { flex: 1; min-width: 0; }
+
+    /* ---- Divider ---- */
+    .divider { border-top: 1px solid var(--grey-200); margin: 16px 0; }
+
+    /* ---- Section title ---- */
+    .section-title { font-size: 11px; font-weight: 500; color: var(--grey-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+    /* ---- Empty state ---- */
+    .empty { text-align: center; padding: 24px 16px; color: var(--grey-500); }
+    .empty .mio { font-size: 36px; display: block; margin-bottom: 8px; color: var(--grey-300); }
+
+    /* ---- Footnote sub-tabs ---- */
+    .sub-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .sub-tab {
+      flex: 1; padding: 6px 8px; border: none; border-radius: 8px; cursor: pointer;
+      font-family: inherit; font-size: 12px; font-weight: 500;
+      background: var(--grey-100); color: var(--grey-700); text-align: center;
+    }
+    .sub-tab:hover { background: var(--grey-200); }
+    .sub-tab.active { background: var(--blue-50); color: var(--blue-600); }
+    .fn-content { display: none; }
+    .fn-content.active { display: block; }
+
+    /* ---- Search ---- */
+    .search-box {
+      position: relative; margin-bottom: 12px;
+    }
+    .search-box .field-input { padding-right: 36px; }
+    .search-box .search-icon {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      color: var(--grey-500); font-size: 18px; pointer-events: none;
+    }
+    .search-results { max-height: 100px; overflow-y: auto; }
+    .search-item {
+      padding: 6px 8px; cursor: pointer; border-radius: 6px; font-size: 12px;
+      transition: background 0.1s;
+    }
+    .search-item:hover { background: var(--blue-50); }
+
+    /* ---- Preview ---- */
+    .preview {
+      background: var(--grey-50); border: 1px solid var(--grey-200); border-radius: 8px;
+      padding: 10px 12px; margin-top: 12px;
+    }
+    .preview-label { font-size: 11px; font-weight: 500; color: var(--grey-500); margin-bottom: 4px; }
+    .preview-text { font-size: 13px; color: var(--grey-900); min-height: 18px; direction: rtl; }
+
+    /* ---- Footer ---- */
+    .footer {
+      position: sticky; bottom: 0; background: white; padding: 8px 16px;
+      border-top: 1px solid var(--grey-200); flex-shrink: 0;
+    }
+    .footer .btn { width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Navigation tabs -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchPanel('appendix')">
+    <span class="mio material-icons-outlined">description</span>נספחים
+  </button>
+  <button class="nav-tab" onclick="switchPanel('entity')">
+    <span class="mio material-icons-outlined">person</span>ישויות
+  </button>
+  <button class="nav-tab" onclick="switchPanel('footnote')">
+    <span class="mio material-icons-outlined">format_quote</span>הערות שוליים
+  </button>
+</div>
+
+<!-- ==================== APPENDIX ==================== -->
+<div class="panel active" id="panel-appendix">
+  <div class="field">
+    <label class="field-label">תיאור הנספח</label>
+    <textarea class="field-textarea" id="app-description" placeholder="לדוגמה: חוזה שכירות מיום 1.1.2024"></textarea>
+  </div>
+  <button class="btn btn-filled" onclick="addAppendix()">
+    <span class="mio material-icons-outlined">add</span>הוסף נספח מהטקסט הנבחר
+  </button>
+  <button class="btn btn-tonal" style="margin-top:6px;" onclick="generateAppendixList()">
+    <span class="mio material-icons-outlined">list</span>צור רשימת נספחים
+  </button>
+  <div class="divider"></div>
+  <div class="section-title">נספחים במסמך</div>
+  <div id="appendixList"></div>
+</div>
+
+<!-- ==================== ENTITY ==================== -->
+<div class="panel" id="panel-entity">
+  <p style="font-size:12px;color:var(--grey-700);margin-bottom:12px;">
+    <strong>הגדרה:</strong> בחר טקסט עם השם המלא → הגדר כינוי.<br>
+    <strong>הכנסה:</strong> שים סמן → לחץ <span class="mio material-icons-outlined" style="font-size:14px;vertical-align:middle;">add_circle</span> ליד ישות קיימת.
+  </p>
+  <div class="field">
+    <label class="field-label">כינוי</label>
+    <input type="text" class="field-input" id="ent-alias" placeholder='לדוגמה: "הבנק", "החברה"'>
+  </div>
+  <div class="field">
+    <label class="field-label">סוג ישות</label>
+    <select class="field-select" id="ent-type">
+      <option value="person">אדם</option>
+      <option value="corporation">תאגיד</option>
+      <option value="place">מקום</option>
+      <option value="legal_provision">הוראת דין</option>
+      <option value="other">אחר</option>
+    </select>
+  </div>
+  <button class="btn btn-filled" onclick="defineEntity()">
+    <span class="mio material-icons-outlined">person_add</span>הגדר ישות מהטקסט הנבחר
+  </button>
+  <div id="associate-section" style="display:none; margin-top:8px;">
+    <div class="divider"></div>
+    <div class="section-title">שייך טקסט נבחר לישות קיימת</div>
+    <div class="field">
+      <select class="field-select" id="ent-associate-select"></select>
+    </div>
+    <button class="btn btn-tonal" onclick="associateSelection()">
+      <span class="mio material-icons-outlined">link</span>שייך טקסט נבחר לישות
+    </button>
+  </div>
+  <div class="divider"></div>
+  <div class="section-title">ישויות במסמך</div>
+  <div id="entityList"></div>
+</div>
+
+<!-- ==================== FOOTNOTE ==================== -->
+<div class="panel" id="panel-footnote">
+  <div class="search-box">
+    <span class="mio material-icons-outlined search-icon">search</span>
+    <input type="text" class="field-input" id="fn-search" placeholder="חיפוש מקור קיים..." oninput="searchSources()">
+  </div>
+  <div class="search-results" id="fn-searchResults"></div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="switchFnTab('legislation')">חקיקה</button>
+    <button class="sub-tab" onclick="switchFnTab('caselaw')">פסיקה</button>
+    <button class="sub-tab" onclick="switchFnTab('literature')">ספרות</button>
+  </div>
+
+  <!-- Legislation -->
+  <div class="fn-content active" id="fn-legislation">
+    <div class="field-row">
+      <div class="field"><label class="field-label">סוג</label>
+        <select class="field-select" id="leg-lawType" onchange="updatePreview()"><option value="חוק">חוק</option><option value="תקנות">תקנות</option><option value="פקודה">פקודה</option><option value="צו">צו</option><option value="חוק-יסוד:">חוק-יסוד:</option></select>
+      </div>
+      <div class="field" style="flex:2"><label class="field-label">שם</label><input type="text" class="field-input" id="leg-name" placeholder="רישוי עסקים" oninput="updatePreview()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">שנה עברית</label><input type="text" class="field-input" id="leg-hebrewYear" placeholder='התשכ"ח' oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">שנה לועזית</label><input type="text" class="field-input" id="leg-gregorianYear" placeholder="1968" oninput="updatePreview()"><div class="field-hint">השנה העברית תחושב אוטומטית</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">פרסום</label>
+        <select class="field-select" id="leg-publication" onchange="updatePreview()"><option value='ס"ח'>ס"ח</option><option value='ק"ת'>ק"ת</option><option value='י"פ'>י"פ</option></select>
+      </div>
+      <div class="field"><label class="field-label">עמוד</label><input type="text" class="field-input" id="leg-page" placeholder="204" oninput="updatePreview()"></div>
+    </div>
+  </div>
+
+  <!-- Case Law -->
+  <div class="fn-content" id="fn-caselaw">
+    <div class="field-row">
+      <div class="field"><label class="field-label">סוג הליך</label>
+        <select class="field-select" id="case-proceedingType" onchange="updatePreview()"><option value='בג"ץ'>בג"ץ</option><option value='ע"א'>ע"א</option><option value='ע"פ'>ע"פ</option><option value='ע"ע'>ע"ע</option><option value='עע"מ'>עע"מ</option><option value='רע"א'>רע"א</option><option value='דנ"א'>דנ"א</option><option value='ת"א'>ת"א</option><option value='ת"פ'>ת"פ</option><option value='עת"מ'>עת"מ</option></select>
+      </div>
+      <div class="field"><label class="field-label">מספר תיק</label><input type="text" class="field-input" id="case-caseNumber" placeholder="6821/93" oninput="updatePreview()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">צד א'</label><input type="text" class="field-input" id="case-party1" placeholder='בנק המזרחי בע"מ' oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">צד ב'</label><input type="text" class="field-input" id="case-party2" placeholder="מגל" oninput="updatePreview()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">כרך</label><input type="text" class="field-input" id="case-reporterVolume" placeholder="מט(4)" oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">פרסום</label>
+        <select class="field-select" id="case-reporter" onchange="updatePreview()"><option value='פ"ד'>פ"ד</option><option value="נבו">נבו</option><option value="תקדין">תקדין</option></select>
+      </div>
+      <div class="field"><label class="field-label">עמוד</label><input type="text" class="field-input" id="case-page" placeholder="221" oninput="updatePreview()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">שנה</label><input type="text" class="field-input" id="case-year" placeholder="1995" oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">פסקה</label><input type="text" class="field-input" id="case-paragraph" placeholder="15" oninput="updatePreview()"></div>
+    </div>
+  </div>
+
+  <!-- Literature -->
+  <div class="fn-content" id="fn-literature">
+    <div class="field-row">
+      <div class="field"><label class="field-label">שם פרטי</label><input type="text" class="field-input" id="lit-authorFirst" placeholder="אהרן" oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">שם משפחה</label><input type="text" class="field-input" id="lit-authorLast" placeholder="ברק" oninput="updatePreview()"></div>
+    </div>
+    <div class="field" style="margin-bottom:8px;">
+      <div style="display:flex;gap:16px;">
+        <label style="font-weight:normal;display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="radio" name="litType" value="book" checked onchange="updateLitFields();updatePreview()"> ספר</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="radio" name="litType" value="article" onchange="updateLitFields();updatePreview()"> מאמר</label>
+      </div>
+    </div>
+    <div class="field"><label class="field-label" id="lit-title-label">כותרת הספר</label><input type="text" class="field-input" id="lit-title" placeholder="פרשנות במשפט" oninput="updatePreview()"></div>
+    <div class="field" id="lit-journal-group"><label class="field-label">שם כתב העת</label><input type="text" class="field-input" id="lit-journal" placeholder="משפטים" oninput="updatePreview()"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">כרך</label><input type="text" class="field-input" id="lit-volume" placeholder="כרך א" oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">עמוד</label><input type="text" class="field-input" id="lit-page" placeholder="123" oninput="updatePreview()"></div>
+    </div>
+    <div class="field-row">
+      <div class="field" id="lit-edition-group"><label class="field-label">מהדורה</label><input type="text" class="field-input" id="lit-edition" placeholder="שנייה" oninput="updatePreview()"></div>
+      <div class="field"><label class="field-label">שנה</label><input type="text" class="field-input" id="lit-year" placeholder="1993" oninput="updatePreview()"></div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--grey-200);">
+    <label class="field-label">הפניה ספציפית (אופציונלי)</label>
+    <input type="text" class="field-input" id="fn-pinpoint" placeholder="בעמ' 45, פס' 12" oninput="updatePreview()">
+  </div>
+  <div class="preview">
+    <div class="preview-label">תצוגה מקדימה</div>
+    <div class="preview-text" id="previewText">הזן נתוני מקור</div>
+  </div>
+  <button class="btn btn-filled" style="margin-top:12px;" onclick="insertFootnote()">
+    <span class="mio material-icons-outlined">post_add</span>הוסף הערת שוליים
+  </button>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <button class="btn btn-outline" onclick="refreshAll()">
+    <span class="mio material-icons-outlined">refresh</span>רענון מסמך
+  </button>
+</div>
+
+<script>
+  // ==================== NAVIGATION ====================
+  function switchPanel(panel) {
+    document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    event.target.closest('.nav-tab').classList.add('active');
+    document.getElementById('panel-' + panel).classList.add('active');
+  }
+
+  // ==================== TOAST ====================
+  function toast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'toast ' + type + ' show';
+    clearTimeout(el._t);
+    el._t = setTimeout(function() { el.classList.remove('show'); }, 3000);
+  }
+  function showError(e) { toast('שגיאה: ' + (e.message || e), 'error'); }
+  function escapeHtml(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  function escapeAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ==================== REFRESH ====================
+  function refreshAll() {
+    toast('מרענן...', 'success');
+    google.script.run.withSuccessHandler(function() {
+      toast('המסמך עודכן!', 'success'); loadAppendices(); loadEntities();
+    }).withFailureHandler(showError).refreshAllFromSidebar();
+  }
+
+  // ==================== APPENDIX ====================
+  loadAppendices();
+  function loadAppendices() {
+    google.script.run.withSuccessHandler(renderAppendices).withFailureHandler(showError).getAppendixList();
+  }
+  function renderAppendices(items) {
+    var c = document.getElementById('appendixList');
+    if (!items || items.length === 0) {
+      c.innerHTML = '<div class="empty"><span class="mio material-icons-outlined">description</span>אין נספחים עדיין</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      html += '<div class="card">' +
+        '<div class="card-title">נספח ' + escapeHtml(it.currentLabel) + '</div>' +
+        '<div class="card-subtitle">' + escapeHtml(it.description) + '</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn btn-text btn-sm" onclick="editAppDesc(\'' + escapeAttr(it.uuid) + '\')"><span class="mio material-icons-outlined">edit</span>ערוך</button>' +
+          '<button class="btn btn-danger-text btn-sm" onclick="removeApp(\'' + escapeAttr(it.uuid) + '\')"><span class="mio material-icons-outlined">delete</span>הסר</button>' +
+        '</div></div>';
+    }
+    c.innerHTML = html;
+  }
+  function addAppendix() {
+    var desc = document.getElementById('app-description').value.trim();
+    if (!desc) { toast('יש להזין תיאור.', 'error'); return; }
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { document.getElementById('app-description').value = ''; toast('נספח נוסף!', 'success'); loadAppendices(); }
+      else toast(r.error, 'error');
+    }).withFailureHandler(showError).addAppendixFromSidebar(desc);
+  }
+  function removeApp(uuid) { if (!confirm('למחוק נספח?')) return; google.script.run.withSuccessHandler(function() { toast('הוסר.', 'success'); loadAppendices(); }).withFailureHandler(showError).removeAppendixFromSidebar(uuid); }
+  function editAppDesc(uuid) { var d = prompt('תיאור חדש:'); if (d) google.script.run.withSuccessHandler(function() { loadAppendices(); }).withFailureHandler(showError).updateAppendixDescription(uuid, d); }
+  function generateAppendixList() { google.script.run.withSuccessHandler(function() { toast('רשימה נוצרה!', 'success'); }).withFailureHandler(showError).generateAppendixListAtCursor(); }
+
+  // ==================== ENTITY ====================
+  var TYPE_LABELS = { person: 'אדם', corporation: 'תאגיד', place: 'מקום', legal_provision: 'הוראת דין', other: 'אחר' };
+  loadEntities();
+  function loadEntities() {
+    google.script.run.withSuccessHandler(renderEntities).withFailureHandler(showError).getEntityList();
+  }
+  function renderEntities(items) {
+    var c = document.getElementById('entityList');
+    if (!items || items.length === 0) {
+      c.innerHTML = '<div class="empty"><span class="mio material-icons-outlined">person_outline</span>אין ישויות עדיין</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var eid = escapeAttr(it.entityId);
+      html += '<div class="card"><div class="entity-row">' +
+        '<button class="entity-insert" onclick="insertEntity(\'' + eid + '\')" title="הכנס במיקום הסמן"><span class="mio material-icons-outlined">add_circle</span></button>' +
+        '<div class="entity-info">' +
+          '<div class="card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(it.fullName) + '</div>' +
+          '<div class="card-subtitle">"' + escapeHtml(it.alias) + '" <span class="badge">' + escapeHtml(TYPE_LABELS[it.type] || it.type) + '</span> <span style="color:var(--grey-500)">' + escapeHtml(String(it.mentionCount)) + ' אזכורים</span></div>' +
+        '</div></div>' +
+        '<div class="card-actions">' +
+          '<button class="btn btn-text btn-sm" onclick="markMention(\'' + eid + '\')"><span class="mio material-icons-outlined">select_all</span>סמן בחירה</button>' +
+          '<button class="btn btn-text btn-sm" onclick="editEntity(\'' + eid + '\')"><span class="mio material-icons-outlined">edit</span>ערוך</button>' +
+          '<button class="btn btn-danger-text btn-sm" onclick="removeEntity(\'' + eid + '\')"><span class="mio material-icons-outlined">delete</span>הסר</button>' +
+        '</div></div>';
+    }
+    c.innerHTML = html;
+    // Fill associate dropdown
+    var sel = document.getElementById('ent-associate-select');
+    var assocSection = document.getElementById('associate-section');
+    if (items && items.length > 0) {
+      assocSection.style.display = 'block';
+      sel.innerHTML = '';
+      for (var i = 0; i < items.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = items[i].entityId;
+        opt.textContent = '\u0022' + items[i].alias + '\u0022 \u2014 ' + items[i].fullName;
+        sel.appendChild(opt);
+      }
+    } else {
+      assocSection.style.display = 'none';
+    }
+  }
+  function associateSelection() {
+    var eid = document.getElementById('ent-associate-select').value;
+    if (!eid) { toast('יש לבחור ישות.', 'error'); return; }
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { toast('הטקסט שויך לישות!', 'success'); loadEntities(); }
+      else toast(r.error, 'error');
+    }).withFailureHandler(showError).markEntityMentionFromSidebar(eid);
+  }
+  function defineEntity() {
+    var alias = document.getElementById('ent-alias').value.trim();
+    var type = document.getElementById('ent-type').value;
+    if (!alias) { toast('יש להזין כינוי.', 'error'); return; }
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { document.getElementById('ent-alias').value = ''; toast('ישות הוגדרה!', 'success'); loadEntities(); }
+      else toast(r.error, 'error');
+    }).withFailureHandler(showError).defineEntityFromSidebar(alias, type);
+  }
+  function insertEntity(eid) {
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { toast('ישות הוכנסה! ההגדרה המלאה עודכנה אוטומטית.', 'success'); loadEntities(); }
+      else toast(r.error, 'error');
+    }).withFailureHandler(showError).insertEntityAtCursor(eid);
+  }
+  function markMention(eid) {
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { toast('אזכור סומן!', 'success'); loadEntities(); } else toast(r.error, 'error');
+    }).withFailureHandler(showError).markEntityMentionFromSidebar(eid);
+  }
+  function removeEntity(eid) { if (!confirm('להסיר ישות?')) return; google.script.run.withSuccessHandler(function() { toast('הוסרה.', 'success'); loadEntities(); }).withFailureHandler(showError).removeEntityFromSidebar(eid); }
+  function editEntity(eid) { var a = prompt('כינוי חדש:'); if (a) google.script.run.withSuccessHandler(function() { toast('עודכן!', 'success'); loadEntities(); }).withFailureHandler(showError).updateEntityFromSidebar(eid, { alias: a }); }
+
+  // ==================== FOOTNOTE ====================
+  var currentFnTab = 'legislation'; var existingSources = []; var selectedExistingSource = null;
+  google.script.run.withSuccessHandler(function(s) { existingSources = s || []; }).getFootnoteSources();
+  document.getElementById('leg-gregorianYear').addEventListener('blur', function() {
+    var y = parseInt(this.value);
+    if (y && !document.getElementById('leg-hebrewYear').value) {
+      google.script.run.withSuccessHandler(function(h) { document.getElementById('leg-hebrewYear').value = h; updatePreview(); }).convertToHebrewYear(y);
+    }
+  });
+  function switchFnTab(tab) {
+    currentFnTab = tab; selectedExistingSource = null;
+    document.querySelectorAll('.sub-tab').forEach(function(t) { t.classList.remove('active'); });
+    event.target.classList.add('active');
+    document.querySelectorAll('.fn-content').forEach(function(c) { c.classList.remove('active'); });
+    document.getElementById('fn-' + tab).classList.add('active');
+    if (tab === 'literature') updateLitFields();
+    updatePreview();
+  }
+  function updateLitFields() {
+    var isArt = document.querySelector('input[name="litType"]:checked').value === 'article';
+    document.getElementById('lit-title-label').textContent = isArt ? 'כותרת המאמר' : 'כותרת הספר';
+    document.getElementById('lit-journal-group').style.display = isArt ? 'block' : 'none';
+    document.getElementById('lit-edition-group').style.display = isArt ? 'none' : 'block';
+  }
+  updateLitFields();
+  function gv(id) { return document.getElementById(id).value; }
+  function getSourceData() {
+    var data = { type: currentFnTab, fields: {} };
+    switch (currentFnTab) {
+      case 'legislation': data.fields = { lawType: gv('leg-lawType'), name: gv('leg-name'), hebrewYear: gv('leg-hebrewYear'), gregorianYear: gv('leg-gregorianYear'), publication: gv('leg-publication'), page: gv('leg-page') }; break;
+      case 'caselaw': data.fields = { proceedingType: gv('case-proceedingType'), caseNumber: gv('case-caseNumber'), party1: gv('case-party1'), party2: gv('case-party2'), reporterVolume: gv('case-reporterVolume'), reporter: gv('case-reporter'), page: gv('case-page'), year: gv('case-year'), paragraph: gv('case-paragraph') }; break;
+      case 'literature':
+        var isArt = document.querySelector('input[name="litType"]:checked').value === 'article';
+        data.fields = { authorFirst: gv('lit-authorFirst'), authorLast: gv('lit-authorLast'), title: gv('lit-title'), isArticle: isArt, journal: isArt ? gv('lit-journal') : '', volume: gv('lit-volume'), page: gv('lit-page'), edition: isArt ? '' : gv('lit-edition'), year: gv('lit-year') }; break;
+    }
+    return data;
+  }
+  function updatePreview() {
+    var pe = document.getElementById('previewText');
+    if (selectedExistingSource) { var p = gv('fn-pinpoint'); var t = selectedExistingSource.shortName + ', לעיל הערה [N]'; if (p) t += ', ' + p; pe.textContent = t + '.'; return; }
+    var data = getSourceData(); var t = formatPreview(data); var p = gv('fn-pinpoint'); if (p) t += ', ' + p; if (t) t += '.'; pe.textContent = t || 'הזן נתוני מקור';
+  }
+  function formatPreview(data) {
+    var f = data.fields;
+    switch (data.type) {
+      case 'legislation': var p = []; if (f.lawType && f.name) p.push(f.lawType + ' ' + f.name); if (f.hebrewYear && f.gregorianYear) p.push(f.hebrewYear + '\u2013' + f.gregorianYear); if (f.publication && f.page) p.push(f.publication + ' ' + f.page); return p.join(', ');
+      case 'caselaw': var r = ''; if (f.proceedingType && f.caseNumber) r += f.proceedingType + ' ' + f.caseNumber + ' '; if (f.party1) r += f.party1; if (f.party2) r += " נ' " + f.party2; if (f.reporterVolume && f.reporter && f.page) r += ', ' + f.reporterVolume + ' ' + f.reporter + ' ' + f.page; if (f.year) r += ' (' + f.year + ')'; if (f.paragraph) r += ", פס' " + f.paragraph; return r;
+      case 'literature': var r = ''; if (f.authorFirst && f.authorLast) r += f.authorFirst + ' ' + f.authorLast + ' '; if (f.isArticle) { if (f.title) r += '"' + f.title + '" '; if (f.journal) r += f.journal + ' '; if (f.volume) r += f.volume + ' '; if (f.page) r += f.page; if (f.year) r += ' (' + f.year + ')'; } else { if (f.title) r += f.title + ' '; if (f.page) r += f.page + ' '; var pa = []; if (f.edition) pa.push('מהדורה ' + f.edition); if (f.year) pa.push(f.year); if (pa.length) r += '(' + pa.join(', ') + ')'; } return r.trim();
+    }
+    return '';
+  }
+  function searchSources() {
+    var q = gv('fn-search').trim().toLowerCase(); var c = document.getElementById('fn-searchResults');
+    if (!q || q.length < 2) { c.innerHTML = ''; selectedExistingSource = null; return; }
+    var tl = { legislation: 'חקיקה', caselaw: 'פסיקה', literature: 'ספרות' };
+    var m = existingSources.filter(function(s) { return s.fullCitation.toLowerCase().indexOf(q) !== -1 || s.shortName.toLowerCase().indexOf(q) !== -1; });
+    if (m.length === 0) { c.innerHTML = '<div style="padding:8px;color:var(--grey-500);font-size:12px;">לא נמצאו מקורות</div>'; return; }
+    var html = '';
+    for (var i = 0; i < m.length; i++) html += '<div class="search-item" onclick="selectSource(' + i + ')"><span class="badge" style="margin-left:4px;">' + (tl[m[i].type] || '') + '</span>' + escapeHtml(m[i].fullCitation) + '</div>';
+    c.innerHTML = html; c._matches = m;
+  }
+  function selectSource(i) { var c = document.getElementById('fn-searchResults'); var m = c._matches; if (!m || !m[i]) return; selectedExistingSource = m[i]; document.getElementById('fn-search').value = m[i].fullCitation; c.innerHTML = ''; toast('מקור נבחר.', 'success'); updatePreview(); }
+  function insertFootnote() {
+    var pinpoint = gv('fn-pinpoint').trim(); var sourceData;
+    if (selectedExistingSource) sourceData = { type: selectedExistingSource.type, fields: selectedExistingSource.fields };
+    else { sourceData = getSourceData(); if (!validateSource(sourceData)) return; }
+    google.script.run.withSuccessHandler(function(r) {
+      if (r.success) { toast('הערה נוספה!', 'success'); google.script.run.withSuccessHandler(function(s) { existingSources = s || []; }).getFootnoteSources(); setTimeout(clearFnForm, 1000); }
+      else toast(r.error, 'error');
+    }).withFailureHandler(showError).insertFootnoteFromDialog(sourceData, pinpoint);
+  }
+  function validateSource(d) { var f = d.fields; switch (d.type) { case 'legislation': if (!f.name) { toast('יש להזין שם חוק.', 'error'); return false; } break; case 'caselaw': if (!f.caseNumber || !f.party1) { toast('יש להזין מספר תיק וצד.', 'error'); return false; } break; case 'literature': if (!f.authorLast || !f.title) { toast('יש להזין מחבר וכותרת.', 'error'); return false; } break; } return true; }
+  function clearFnForm() { document.querySelectorAll('#panel-footnote input[type="text"]').forEach(function(i) { i.value = ''; }); selectedExistingSource = null; updatePreview(); }
+</script>
+</body>
+</html>

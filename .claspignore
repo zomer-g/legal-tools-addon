@@ -1,0 +1,12 @@
+css/**
+js/**
+data/**
+docs/**
+.claude/**
+serve.py
+viewer.html
+index.html
+node_modules/**
+.git/**
+.clasp.json
+.claspignore

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      direction: rtl;
+      margin: 0;
+      padding: 16px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 16px;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 14px;
+      font-family: inherit;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #333; }
+    .tab.active {
+      color: #1a73e8;
+      border-bottom-color: #1a73e8;
+      font-weight: bold;
+    }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: bold;
+      font-size: 12px;
+      color: #555;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+      direction: rtl;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #1a73e8;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    .form-group .hint {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* Existing sources search */
+    .search-section {
+      margin-bottom: 16px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+    .search-section label {
+      font-weight: bold;
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .search-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+      direction: rtl;
+    }
+    .search-results {
+      max-height: 120px;
+      overflow-y: auto;
+      margin-top: 6px;
+    }
+    .search-result-item {
+      padding: 6px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .search-result-item:hover {
+      background: #e8f0fe;
+      border-color: #1a73e8;
+    }
+    .search-result-item .source-type {
+      font-size: 10px;
+      color: #888;
+      display: inline-block;
+      background: #e0e0e0;
+      padding: 1px 5px;
+      border-radius: 8px;
+      margin-left: 4px;
+    }
+
+    /* Preview */
+    .preview-section {
+      margin-top: 12px;
+      padding: 10px;
+      background: #e8f0fe;
+      border-radius: 6px;
+      border: 1px solid #c2d6f5;
+    }
+    .preview-section label {
+      font-weight: bold;
+      font-size: 12px;
+      color: #1a73e8;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .preview-text {
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 20px;
+      color: #333;
+    }
+
+    /* Buttons */
+    .btn-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-start;
+    }
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: background-color 0.2s;
+    }
+    .btn-primary {
+      background-color: #1a73e8;
+      color: white;
+    }
+    .btn-primary:hover { background-color: #1557b0; }
+    .btn-secondary {
+      background-color: #f1f3f4;
+      color: #333;
+    }
+    .btn-secondary:hover { background-color: #e0e0e0; }
+
+    /* Status */
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      display: none;
+    }
+    .status.success { display: block; background: #e6f4ea; color: #137333; }
+    .status.error { display: block; background: #fce8e6; color: #c5221f; }
+
+    /* Pinpoint section */
+    .pinpoint-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="status" class="status"></div>
+
+  <!-- Search existing sources -->
+  <div class="search-section">
+    <label>חיפוש מקור קיים:</label>
+    <input type="text" class="search-input" id="searchInput"
+           placeholder="הקלד שם מקור לציטוט חוזר..." oninput="searchSources()">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('legislation')">חקיקה</button>
+    <button class="tab" onclick="switchTab('caselaw')">פסיקה</button>
+    <button class="tab" onclick="switchTab('literature')">ספרות</button>
+  </div>
+
+  <!-- Legislation Tab -->
+  <div class="tab-content active" id="tab-legislation">
+    <div class="form-row">
+      <div class="form-group">
+        <label>סוג:</label>
+        <select id="leg-lawType" onchange="updatePreview()">
+          <option value="חוק">חוק</option>
+          <option value="תקנות">תקנות</option>
+          <option value="פקודה">פקודה</option>
+          <option value="צו">צו</option>
+          <option value="חוק-יסוד:">חוק-יסוד:</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:2;">
+        <label>שם:</label>
+        <input type="text" id="leg-name" placeholder="רישוי עסקים" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>שנה עברית:</label>
+        <input type="text" id="leg-hebrewYear" placeholder='התשכ"ח' oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>שנה לועזית:</label>
+        <input type="text" id="leg-gregorianYear" placeholder="1968" oninput="updatePreview()">
+        <div class="hint">הזן שנה לועזית, והשנה העברית תחושב אוטומטית</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>פרסום:</label>
+        <select id="leg-publication" onchange="updatePreview()">
+          <option value='ס"ח'>ס"ח</option>
+          <option value='ק"ת'>ק"ת</option>
+          <option value='י"פ'>י"פ</option>
+          <option value='דמ"י'>דמ"י</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>עמוד:</label>
+        <input type="text" id="leg-page" placeholder="204" oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Law Tab -->
+  <div class="tab-content" id="tab-caselaw">
+    <div class="form-row">
+      <div class="form-group">
+        <label>סוג הליך:</label>
+        <select id="case-proceedingType" onchange="updatePreview()">
+          <option value='בג"ץ'>בג"ץ</option>
+          <option value='ע"א'>ע"א</option>
+          <option value='ע"פ'>ע"פ</option>
+          <option value='ע"ע'>ע"ע</option>
+          <option value='עע"מ'>עע"מ</option>
+          <option value='רע"א'>רע"א</option>
+          <option value='רע"פ'>רע"פ</option>
+          <option value='דנ"א'>דנ"א</option>
+          <option value='דנ"פ'>דנ"פ</option>
+          <option value='ת"א'>ת"א</option>
+          <option value='ת"פ'>ת"פ</option>
+          <option value='ה"פ'>ה"פ</option>
+          <option value='עת"מ'>עת"מ</option>
+          <option value='ע"ב'>ע"ב</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>מספר תיק:</label>
+        <input type="text" id="case-caseNumber" placeholder="6821/93" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>צד א':</label>
+        <input type="text" id="case-party1" placeholder='בנק המזרחי המאוחד בע"מ' oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>צד ב':</label>
+        <input type="text" id="case-party2" placeholder="מגל" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>כרך:</label>
+        <input type="text" id="case-reporterVolume" placeholder="מט(4)" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>פרסום:</label>
+        <select id="case-reporter" onchange="updatePreview()">
+          <option value='פ"ד'>פ"ד</option>
+          <option value='פד"ע'>פד"ע</option>
+          <option value='פד"מ'>פד"מ</option>
+          <option value="נבו">נבו</option>
+          <option value="תקדין">תקדין</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>עמוד:</label>
+        <input type="text" id="case-page" placeholder="221" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>שנה:</label>
+        <input type="text" id="case-year" placeholder="1995" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>פסקה (אופציונלי):</label>
+        <input type="text" id="case-paragraph" placeholder="15" oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Literature Tab -->
+  <div class="tab-content" id="tab-literature">
+    <div class="form-row">
+      <div class="form-group">
+        <label>שם פרטי מחבר:</label>
+        <input type="text" id="lit-authorFirst" placeholder="אהרן" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>שם משפחה מחבר:</label>
+        <input type="text" id="lit-authorLast" placeholder="ברק" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>סוג:</label>
+      <div style="display:flex; gap:16px; margin:4px 0;">
+        <label style="font-weight:normal; display:flex; align-items:center; gap:4px;">
+          <input type="radio" name="litType" value="book" checked onchange="updatePreview()"> ספר
+        </label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:4px;">
+          <input type="radio" name="litType" value="article" onchange="updatePreview()"> מאמר
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label id="lit-title-label">כותרת הספר:</label>
+      <input type="text" id="lit-title" placeholder="פרשנות במשפט" oninput="updatePreview()">
+    </div>
+    <div class="form-group" id="lit-journal-group">
+      <label>שם כתב העת:</label>
+      <input type="text" id="lit-journal" placeholder="משפטים" oninput="updatePreview()">
+    </div>
+    <div class="form-row">
+      <div class="form-group" id="lit-volume-group">
+        <label>כרך:</label>
+        <input type="text" id="lit-volume" placeholder="כרך א" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>עמוד:</label>
+        <input type="text" id="lit-page" placeholder="123" oninput="updatePreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" id="lit-edition-group">
+        <label>מהדורה (אופציונלי):</label>
+        <input type="text" id="lit-edition" placeholder="שנייה" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>שנה:</label>
+        <input type="text" id="lit-year" placeholder="1993" oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Pinpoint (shared across all tabs) -->
+  <div class="pinpoint-section">
+    <div class="form-group">
+      <label>הפניה ספציפית (אופציונלי):</label>
+      <input type="text" id="pinpoint" placeholder='בעמ׳ 45, פס׳ 12, סעיף 3(א)' oninput="updatePreview()">
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-section">
+    <label>תצוגה מקדימה:</label>
+    <div class="preview-text" id="previewText">הזן נתוני מקור לתצוגה מקדימה</div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="insertFootnote()">הוסף הערת שוליים</button>
+    <button class="btn btn-secondary" onclick="google.script.host.close()">ביטול</button>
+  </div>
+
+  <script>
+    var currentTab = 'legislation';
+    var existingSources = [];
+    var selectedExistingSource = null;
+
+    // Load existing sources
+    google.script.run
+      .withSuccessHandler(function(sources) {
+        existingSources = sources || [];
+      })
+      .getFootnoteSources();
+
+    // Auto-compute Hebrew year
+    document.getElementById('leg-gregorianYear').addEventListener('blur', function() {
+      var gYear = parseInt(this.value);
+      if (gYear && !document.getElementById('leg-hebrewYear').value) {
+        google.script.run
+          .withSuccessHandler(function(hYear) {
+            document.getElementById('leg-hebrewYear').value = hYear;
+            updatePreview();
+          })
+          .convertToHebrewYear(gYear);
+      }
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      selectedExistingSource = null;
+
+      // Update tab buttons
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      event.target.classList.add('active');
+
+      // Update tab content
+      var contents = document.querySelectorAll('.tab-content');
+      contents.forEach(function(c) { c.classList.remove('active'); });
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      // Update literature-specific fields
+      if (tab === 'literature') {
+        updateLitFields();
+      }
+
+      updatePreview();
+    }
+
+    function updateLitFields() {
+      var isArticle = document.querySelector('input[name="litType"]:checked').value === 'article';
+      document.getElementById('lit-title-label').textContent = isArticle ? 'כותרת המאמר:' : 'כותרת הספר:';
+      document.getElementById('lit-journal-group').style.display = isArticle ? 'block' : 'none';
+      document.getElementById('lit-edition-group').style.display = isArticle ? 'none' : 'block';
+    }
+
+    // Initial setup
+    updateLitFields();
+
+    function getSourceData() {
+      var data = { type: currentTab, fields: {} };
+
+      switch (currentTab) {
+        case 'legislation':
+          data.fields = {
+            lawType: document.getElementById('leg-lawType').value,
+            name: document.getElementById('leg-name').value,
+            hebrewYear: document.getElementById('leg-hebrewYear').value,
+            gregorianYear: document.getElementById('leg-gregorianYear').value,
+            publication: document.getElementById('leg-publication').value,
+            page: document.getElementById('leg-page').value
+          };
+          break;
+        case 'caselaw':
+          data.fields = {
+            proceedingType: document.getElementById('case-proceedingType').value,
+            caseNumber: document.getElementById('case-caseNumber').value,
+            party1: document.getElementById('case-party1').value,
+            party2: document.getElementById('case-party2').value,
+            reporterVolume: document.getElementById('case-reporterVolume').value,
+            reporter: document.getElementById('case-reporter').value,
+            page: document.getElementById('case-page').value,
+            year: document.getElementById('case-year').value,
+            paragraph: document.getElementById('case-paragraph').value
+          };
+          break;
+        case 'literature':
+          var isArticle = document.querySelector('input[name="litType"]:checked').value === 'article';
+          data.fields = {
+            authorFirst: document.getElementById('lit-authorFirst').value,
+            authorLast: document.getElementById('lit-authorLast').value,
+            title: document.getElementById('lit-title').value,
+            isArticle: isArticle,
+            journal: isArticle ? document.getElementById('lit-journal').value : '',
+            volume: document.getElementById('lit-volume').value,
+            page: document.getElementById('lit-page').value,
+            edition: isArticle ? '' : document.getElementById('lit-edition').value,
+            year: document.getElementById('lit-year').value
+          };
+          break;
+      }
+
+      return data;
+    }
+
+    function updatePreview() {
+      var previewEl = document.getElementById('previewText');
+
+      if (selectedExistingSource) {
+        var pinpoint = document.getElementById('pinpoint').value;
+        var text = selectedExistingSource.shortName + ', לעיל הערה [N]';
+        if (pinpoint) text += ', ' + pinpoint;
+        text += '.';
+        previewEl.textContent = text;
+        return;
+      }
+
+      var data = getSourceData();
+      var text = formatPreview(data);
+      var pinpoint = document.getElementById('pinpoint').value;
+      if (pinpoint) text += ', ' + pinpoint;
+      if (text) text += '.';
+
+      previewEl.textContent = text || 'הזן נתוני מקור לתצוגה מקדימה';
+    }
+
+    function formatPreview(data) {
+      var f = data.fields;
+      switch (data.type) {
+        case 'legislation':
+          var parts = [];
+          if (f.lawType && f.name) parts.push(f.lawType + ' ' + f.name);
+          if (f.hebrewYear && f.gregorianYear) parts.push(f.hebrewYear + '\u2013' + f.gregorianYear);
+          else if (f.hebrewYear) parts.push(f.hebrewYear);
+          if (f.publication && f.page) parts.push(f.publication + ' ' + f.page);
+          return parts.join(', ');
+
+        case 'caselaw':
+          var r = '';
+          if (f.proceedingType && f.caseNumber) r += f.proceedingType + ' ' + f.caseNumber + ' ';
+          if (f.party1) r += f.party1;
+          if (f.party2) r += " נ' " + f.party2;
+          if (f.reporterVolume && f.reporter && f.page) r += ', ' + f.reporterVolume + ' ' + f.reporter + ' ' + f.page;
+          if (f.year) r += ' (' + f.year + ')';
+          if (f.paragraph) r += ', פס\' ' + f.paragraph;
+          return r;
+
+        case 'literature':
+          var r = '';
+          if (f.authorFirst && f.authorLast) r += f.authorFirst + ' ' + f.authorLast + ' ';
+          if (f.isArticle) {
+            if (f.title) r += '"' + f.title + '" ';
+            if (f.journal) r += f.journal + ' ';
+            if (f.volume) r += f.volume + ' ';
+            if (f.page) r += f.page;
+            if (f.year) r += ' (' + f.year + ')';
+          } else {
+            if (f.title) r += f.title + ' ';
+            if (f.page) r += f.page + ' ';
+            var paren = [];
+            if (f.edition) paren.push('מהדורה ' + f.edition);
+            if (f.year) paren.push(f.year);
+            if (paren.length) r += '(' + paren.join(', ') + ')';
+          }
+          return r.trim();
+      }
+      return '';
+    }
+
+    function searchSources() {
+      var query = document.getElementById('searchInput').value.trim().toLowerCase();
+      var container = document.getElementById('searchResults');
+
+      if (!query || query.length < 2) {
+        container.innerHTML = '';
+        selectedExistingSource = null;
+        return;
+      }
+
+      var typeLabels = { 'legislation': 'חקיקה', 'caselaw': 'פסיקה', 'literature': 'ספרות' };
+      var matches = existingSources.filter(function(s) {
+        return s.fullCitation.toLowerCase().indexOf(query) !== -1 ||
+               s.shortName.toLowerCase().indexOf(query) !== -1;
+      });
+
+      if (matches.length === 0) {
+        container.innerHTML = '<div style="padding:6px; color:#888; font-size:12px;">לא נמצאו מקורות</div>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < matches.length; i++) {
+        var s = matches[i];
+        html += '<div class="search-result-item" onclick="selectSource(' + i + ')" data-index="' + i + '">' +
+          '<span class="source-type">' + escapeHtml(typeLabels[s.type] || s.type) + '</span> ' +
+          escapeHtml(s.fullCitation) +
+        '</div>';
+      }
+      container.innerHTML = html;
+      container._matches = matches;
+    }
+
+    function selectSource(index) {
+      var container = document.getElementById('searchResults');
+      var matches = container._matches;
+      if (!matches || !matches[index]) return;
+
+      selectedExistingSource = matches[index];
+      document.getElementById('searchInput').value = selectedExistingSource.fullCitation;
+      container.innerHTML = '';
+      showStatus('מקור נבחר - יוכנס כציטוט חוזר.', 'success');
+      updatePreview();
+    }
+
+    function insertFootnote() {
+      var pinpoint = document.getElementById('pinpoint').value.trim();
+
+      var sourceData;
+      if (selectedExistingSource) {
+        sourceData = {
+          type: selectedExistingSource.type,
+          fields: selectedExistingSource.fields
+        };
+      } else {
+        sourceData = getSourceData();
+        // Validate minimum fields
+        if (!validateSource(sourceData)) return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showStatus('הערת שוליים נוספה בהצלחה!', 'success');
+            // Reload sources
+            google.script.run
+              .withSuccessHandler(function(sources) { existingSources = sources || []; })
+              .getFootnoteSources();
+            // Clear form after short delay
+            setTimeout(function() {
+              clearForm();
+            }, 1500);
+          } else {
+            showStatus(result.error, 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showStatus('שגיאה: ' + err.message, 'error');
+        })
+        .insertFootnoteFromDialog(sourceData, pinpoint);
+    }
+
+    function validateSource(data) {
+      var f = data.fields;
+      switch (data.type) {
+        case 'legislation':
+          if (!f.name) { showStatus('יש להזין שם חוק/תקנה.', 'error'); return false; }
+          break;
+        case 'caselaw':
+          if (!f.caseNumber || !f.party1) { showStatus('יש להזין מספר תיק ושם צד אחד לפחות.', 'error'); return false; }
+          break;
+        case 'literature':
+          if (!f.authorLast || !f.title) { showStatus('יש להזין שם מחבר וכותרת.', 'error'); return false; }
+          break;
+      }
+      return true;
+    }
+
+    function clearForm() {
+      var inputs = document.querySelectorAll('input[type="text"]');
+      inputs.forEach(function(input) { input.value = ''; });
+      selectedExistingSource = null;
+      updatePreview();
+    }
+
+    function showStatus(msg, type) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + type;
+      if (type === 'success') {
+        setTimeout(function() { el.className = 'status'; }, 3000);
+      }
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

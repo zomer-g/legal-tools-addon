@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "id": "omar-duanias",
+      "title": "עומר דואניאס",
+      "subtitle": "פל\"א 404056/2024; 477363/2024",
+      "icon": "fa-gavel",
+      "documents": [
+        {
+          "id": "hearing-arguments",
+          "title": "בקשה להימנע מהגשת כתב אישום",
+          "date": "2025",
+          "type": "hearing"
+        }
+      ]
+    }
+  ]
+}

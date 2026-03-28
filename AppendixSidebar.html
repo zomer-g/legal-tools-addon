@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      direction: rtl;
+      margin: 0;
+      padding: 12px;
+      font-size: 13px;
+      color: #333;
+    }
+    h3 {
+      margin: 0 0 12px 0;
+      font-size: 15px;
+      color: #1a73e8;
+      border-bottom: 2px solid #1a73e8;
+      padding-bottom: 6px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: background-color 0.2s;
+    }
+    .btn-primary {
+      background-color: #1a73e8;
+      color: white;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .btn-primary:hover { background-color: #1557b0; }
+    .btn-secondary {
+      background-color: #f1f3f4;
+      color: #333;
+    }
+    .btn-secondary:hover { background-color: #e0e0e0; }
+    .btn-danger {
+      background-color: #d93025;
+      color: white;
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .btn-danger:hover { background-color: #b3261e; }
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+      direction: rtl;
+    }
+    .form-group textarea {
+      height: 60px;
+      resize: vertical;
+    }
+    .appendix-list {
+      margin-top: 12px;
+    }
+    .appendix-item {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .appendix-item .label {
+      font-weight: bold;
+      color: #1a73e8;
+      font-size: 14px;
+    }
+    .appendix-item .description {
+      margin: 4px 0;
+      color: #555;
+    }
+    .appendix-item .actions {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+    }
+    .orphaned {
+      border-color: #ffa726;
+      background: #fff8e1;
+    }
+    .orphaned .label::after {
+      content: ' (יתום)';
+      color: #e65100;
+      font-size: 11px;
+    }
+    .divider {
+      border-top: 1px solid #e0e0e0;
+      margin: 12px 0;
+    }
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      display: none;
+    }
+    .status.success { display: block; background: #e6f4ea; color: #137333; }
+    .status.error { display: block; background: #fce8e6; color: #c5221f; }
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h3>נספחים</h3>
+
+  <div id="status" class="status"></div>
+
+  <!-- Add new appendix -->
+  <div id="addSection">
+    <div class="form-group">
+      <label>תיאור הנספח:</label>
+      <textarea id="description" placeholder="לדוגמה: חוזה שכירות מיום 1.1.2024"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="addAppendix()">הוסף נספח (מהטקסט הנבחר)</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Refresh button -->
+  <button class="btn btn-secondary" style="width:100%; margin-bottom:12px;" onclick="refreshAppendices()">רענן מספור</button>
+
+  <!-- Appendix list -->
+  <div id="appendixList" class="appendix-list">
+    <div class="loading">טוען נספחים...</div>
+  </div>
+
+  <script>
+    // Load appendices on sidebar open
+    loadAppendices();
+
+    function loadAppendices() {
+      google.script.run
+        .withSuccessHandler(renderList)
+        .withFailureHandler(showError)
+        .getAppendixList();
+    }
+
+    function renderList(items) {
+      var container = document.getElementById('appendixList');
+      if (!items || items.length === 0) {
+        container.innerHTML = '<p style="color:#888; text-align:center;">אין נספחים עדיין. בחר טקסט והוסף נספח.</p>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        var orphanedClass = item.orphaned ? ' orphaned' : '';
+        html += '<div class="appendix-item' + orphanedClass + '">' +
+          '<div class="label">נספח ' + escapeHtml(item.currentLabel) + '</div>' +
+          '<div class="description">' + escapeHtml(item.description) + '</div>' +
+          '<div class="actions">' +
+            '<button class="btn btn-secondary btn-small" onclick="editDescription(\'' + escapeHtml(item.uuid) + '\', this)">ערוך</button>' +
+            '<button class="btn btn-danger btn-small" onclick="removeAppendix(\'' + escapeHtml(item.uuid) + '\')">הסר</button>' +
+          '</div>' +
+        '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    function addAppendix() {
+      var desc = document.getElementById('description').value.trim();
+      if (!desc) {
+        showStatus('יש להזין תיאור לנספח.', 'error');
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            document.getElementById('description').value = '';
+            showStatus('נספח נוסף בהצלחה!', 'success');
+            loadAppendices();
+          } else {
+            showStatus(result.error, 'error');
+          }
+        })
+        .withFailureHandler(showError)
+        .addAppendixFromSidebar(desc);
+    }
+
+    function removeAppendix(uuid) {
+      if (!confirm('האם למחוק נספח זה?')) return;
+      google.script.run
+        .withSuccessHandler(function() {
+          showStatus('נספח הוסר.', 'success');
+          loadAppendices();
+        })
+        .withFailureHandler(showError)
+        .removeAppendixFromSidebar(uuid);
+    }
+
+    function editDescription(uuid, btn) {
+      var descEl = btn.parentElement.previousElementSibling;
+      var currentDesc = descEl.textContent;
+      var newDesc = prompt('תיאור חדש:', currentDesc);
+      if (newDesc && newDesc !== currentDesc) {
+        google.script.run
+          .withSuccessHandler(function() {
+            loadAppendices();
+          })
+          .withFailureHandler(showError)
+          .updateAppendixDescription(uuid, newDesc);
+      }
+    }
+
+    function refreshAppendices() {
+      showStatus('מרענן...', 'success');
+      google.script.run
+        .withSuccessHandler(function() {
+          showStatus('הנספחים עודכנו!', 'success');
+          loadAppendices();
+        })
+        .withFailureHandler(showError)
+        .refreshAppendicesFromSidebar();
+    }
+
+    function showStatus(msg, type) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + type;
+      if (type === 'success') {
+        setTimeout(function() { el.className = 'status'; }, 3000);
+      }
+    }
+
+    function showError(err) {
+      showStatus('שגיאה: ' + err.message, 'error');
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

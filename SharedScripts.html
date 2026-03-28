@@ -1,0 +1,48 @@
+<script>
+  /**
+   * SharedScripts.html -- Common JS utilities for sidebars and dialogs
+   */
+
+  /**
+   * Show a status message that auto-hides after 3 seconds for success messages.
+   */
+  function showStatus(msg, type) {
+    var el = document.getElementById('status');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'status ' + type;
+    if (type === 'success') {
+      setTimeout(function() { el.className = 'status'; }, 3000);
+    }
+  }
+
+  /**
+   * Show an error from a google.script.run failure handler.
+   */
+  function showError(err) {
+    showStatus('שגיאה: ' + (err.message || err), 'error');
+  }
+
+  /**
+   * Escape HTML to prevent XSS in dynamically generated content.
+   */
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Wrapper for google.script.run with standardized error handling.
+   * Usage: serverCall('functionName', arg1, arg2).then(result => ...)
+   */
+  function serverCall(functionName) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function(resolve, reject) {
+      var runner = google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject);
+      runner[functionName].apply(runner, args);
+    });
+  }
+</script>
